@@ -1,0 +1,27 @@
+[tools]
+go = "1.27.2"
+
+[env]
+MACOSX_DEPLOYMENT_TARGET = "13.0"
+CGO_CFLAGS = "-mmacosx-version-min=13.0"
+CGO_LDFLAGS = "-mmacosx-version-min=13.0"
+
+[tasks.dev]
+description = "Run the tray app from the terminal"
+run = "go run ."
+
+[tasks.app]
+description = "Build bin/isColimaRunning.app"
+run = """
+set -e
+APP=bin/isColimaRunning.app
+mkdir -p "$APP/Contents/MacOS"
+go build -trimpath -ldflags="-s -w" -o "$APP/Contents/MacOS/isColimaRunning" .
+cp macos/Info.plist "$APP/Contents/Info.plist"
+codesign --force --sign - "$APP"
+"""
+
+[tasks.install]
+description = "Build and copy the app to /Applications"
+depends = ["app"]
+run = "ditto bin/isColimaRunning.app /Applications/isColimaRunning.app"
